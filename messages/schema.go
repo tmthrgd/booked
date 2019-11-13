@@ -8,7 +8,6 @@ import (
 	"path"
 	"sort"
 	"strings"
-	"sync"
 )
 
 var threads = make(map[string]*messageJSON)
@@ -72,24 +71,16 @@ func ParseMessageJSON(f *zip.File) error {
 
 	if t, dup := threads[msg.ThreadPath]; dup {
 		t.Messages = append(t.Messages, msg.Messages...)
+
+		sort.Slice(t.Messages, func(i, j int) bool {
+			return t.Messages[i].TimestampMS >
+				t.Messages[j].TimestampMS
+		})
 	} else {
 		threads[msg.ThreadPath] = &msg
 	}
 
 	return nil
-}
-
-var sortMessagesOnce sync.Once
-
-func sortMessages() {
-	sortMessagesOnce.Do(func() {
-		for _, t := range threads {
-			sort.Slice(t.Messages, func(i, j int) bool {
-				return t.Messages[i].TimestampMS >
-					t.Messages[j].TimestampMS
-			})
-		}
-	})
 }
 
 type messageJSON struct {
