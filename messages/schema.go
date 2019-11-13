@@ -8,6 +8,8 @@ import (
 	"path"
 	"sort"
 	"strings"
+
+	"golang.org/x/text/encoding/charmap"
 )
 
 var threads = make(map[string]*messageJSON)
@@ -69,6 +71,32 @@ func ParseMessageJSON(f *zip.File) error {
 		}
 	}
 
+	for i := range msg.Participants {
+		p := &msg.Participants[i]
+		p.Name = toUTF8(p.Name)
+	}
+	for i := range msg.Messages {
+		m := &msg.Messages[i]
+		m.SenderName = toUTF8(m.SenderName)
+		m.Content = toUTF8(m.Content)
+
+		for j := range m.Reactions {
+			r := &m.Reactions[j]
+			r.Reaction = toUTF8(r.Reaction)
+			r.Actor = toUTF8(r.Actor)
+		}
+
+		m.Plan.Title = toUTF8(m.Plan.Title)
+		m.Plan.Location = toUTF8(m.Plan.Location)
+		m.Share.ShareText = toUTF8(m.Share.ShareText)
+
+		for j := range m.Users {
+			u := &m.Users[j]
+			u.Name = toUTF8(u.Name)
+		}
+	}
+	msg.Title = toUTF8(msg.Title)
+
 	if t, dup := threads[msg.ThreadPath]; dup {
 		t.Messages = append(t.Messages, msg.Messages...)
 
@@ -81,6 +109,17 @@ func ParseMessageJSON(f *zip.File) error {
 	}
 
 	return nil
+}
+
+var latin1Encoder = charmap.ISO8859_1.NewEncoder()
+
+func toUTF8(s string) string {
+	cleaned, err := latin1Encoder.String(s)
+	if err != nil {
+		return s
+	}
+
+	return cleaned
 }
 
 type messageJSON struct {
