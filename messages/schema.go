@@ -106,7 +106,7 @@ type messageJSON struct {
 			URI               string
 			CreationTimestamp uint64 `json:"creation_timestamp"`
 		} `json:"audio_files"`
-		GIFS []struct {
+		GIFs []struct {
 			URI string
 		}
 		Files []struct {
