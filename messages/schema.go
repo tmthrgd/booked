@@ -1,4 +1,4 @@
-package main
+package messages
 
 import (
 	"archive/zip"
@@ -8,21 +8,22 @@ import (
 	"path"
 	"sort"
 	"strings"
+	"sync"
 )
 
 var threads = make(map[string]*messageJSON)
 
-func isMessageJSON(f *zip.File) bool {
+func IsMessageJSON(f *zip.File) bool {
 	return strings.HasPrefix(path.Base(f.Name), "message_") &&
 		path.Ext(f.Name) == ".json"
 }
 
-func parseMessageJSON(f *zip.File) error {
+func ParseMessageJSON(f *zip.File) error {
 	fail := func(err error) error {
 		return fmt.Errorf("booked: failed to parse %s: %w", f.Name, err)
 	}
 
-	if !isMessageJSON(f) {
+	if !IsMessageJSON(f) {
 		panic("booked: internal error: not message.json")
 	}
 
@@ -78,13 +79,17 @@ func parseMessageJSON(f *zip.File) error {
 	return nil
 }
 
+var sortMessagesOnce sync.Once
+
 func sortMessages() {
-	for _, t := range threads {
-		sort.Slice(t.Messages, func(i, j int) bool {
-			return t.Messages[i].TimestampMS >
-				t.Messages[j].TimestampMS
-		})
-	}
+	sortMessagesOnce.Do(func() {
+		for _, t := range threads {
+			sort.Slice(t.Messages, func(i, j int) bool {
+				return t.Messages[i].TimestampMS >
+					t.Messages[j].TimestampMS
+			})
+		}
+	})
 }
 
 type messageJSON struct {

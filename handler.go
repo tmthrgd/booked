@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"net/http"
 
+	"go.tmthrgd.dev/booked/messages"
 	"golang.org/x/tools/godoc/vfs/httpfs"
 	"golang.org/x/tools/godoc/vfs/zipfs"
 )
@@ -16,14 +17,12 @@ func open(file string) (http.Handler, error) {
 
 	for _, f := range rc.File {
 		switch {
-		case isMessageJSON(f):
-			if err := parseMessageJSON(f); err != nil {
+		case messages.IsMessageJSON(f):
+			if err := messages.ParseMessageJSON(f); err != nil {
 				return nil, err
 			}
 		}
 	}
-
-	sortMessages()
 
 	fs := zipfs.New(rc, file)
 	return http.FileServer(httpfs.New(fs)), nil
