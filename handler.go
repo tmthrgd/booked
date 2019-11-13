@@ -14,6 +14,17 @@ func open(file string) (http.Handler, error) {
 		return nil, err
 	}
 
+	for _, f := range rc.File {
+		switch {
+		case isMessageJSON(f):
+			if err := parseMessageJSON(f); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	sortMessages()
+
 	fs := zipfs.New(rc, file)
 	return http.FileServer(httpfs.New(fs)), nil
 }
