@@ -4,9 +4,9 @@ import (
 	"archive/zip"
 	"net/http"
 
+	"github.com/go-chi/chi"
 	"go.tmthrgd.dev/booked/messages"
-	"golang.org/x/tools/godoc/vfs/httpfs"
-	"golang.org/x/tools/godoc/vfs/zipfs"
+	"go.tmthrgd.dev/booked/web"
 )
 
 func open(file string) (http.Handler, error) {
@@ -24,6 +24,11 @@ func open(file string) (http.Handler, error) {
 		}
 	}
 
-	fs := zipfs.New(rc, file)
-	return http.FileServer(httpfs.New(fs)), nil
+	r := chi.NewRouter()
+	r.NotFound(web.NotFoundHandler())
+	r.MethodNotAllowed(web.MethodNotAllowedHandler())
+
+	web.MountData(r, rc)
+
+	return r, nil
 }
