@@ -1,8 +1,10 @@
 package web
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"html"
 	"html/template"
 	"io"
 	"net/http"
@@ -26,6 +28,10 @@ func MethodNotAllowedHandler() http.HandlerFunc {
 	})
 }
 
+var errorTmpl = NewTemplate("error.tmpl", template.FuncMap{
+	"httpStatusText": http.StatusText,
+})
+
 // ErrorHandler converts a handler with an error return to a http.HandlerFunc,
 // sending a HTTP error code and a JSON formatted RFC 7807 problem detail
 // document to the client appropriate for a given error.
@@ -37,18 +43,34 @@ func ErrorHandler(handler func(http.ResponseWriter, *http.Request) error) http.H
 		}
 
 		statusCode := http.StatusInternalServerError
-		errorMsg := err.Error()
+		errorMsg := html.EscapeString(err.Error())
 		switch {
 		case errors.Is(err, os.ErrNotExist):
 			statusCode = http.StatusNotFound
 			errorMsg = "The requested file was not found."
 		case err == errMethodNotAllowed:
 			statusCode = http.StatusMethodNotAllowed
-			errorMsg = fmt.Sprintf("The request method %s is inappropriate for the URL %s.",
-				r.Method, r.URL.Path)
+			errorMsg = fmt.Sprintf("The request method <code>%s</code> is inappropriate for the URL <code>%s</code>.",
+				html.EscapeString(r.Method), html.EscapeString(r.URL.Path))
 		}
 
-		http.Error(w, errorMsg, statusCode)
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(statusCode)
+
+		var buf bytes.Buffer
+		if errorTmpl.Execute(&buf, &struct {
+			StatusCode int
+			Message    template.HTML
+		}{
+			statusCode,
+			template.HTML(errorMsg),
+		}) == nil {
+			buf.WriteTo(w)
+			return
+		}
+
+		fmt.Fprintf(w, "%d %s: %s", statusCode,
+			http.StatusText(statusCode), errorMsg)
 	}
 }
 
