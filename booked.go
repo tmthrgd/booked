@@ -1,5 +1,7 @@
 package main
 
+//go:generate go run -tags=dev internal/assets/generate.go
+
 import (
 	"flag"
 	"log"

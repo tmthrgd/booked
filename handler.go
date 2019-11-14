@@ -28,6 +28,7 @@ func open(file string) (http.Handler, error) {
 	r.NotFound(web.NotFoundHandler())
 	r.MethodNotAllowed(web.MethodNotAllowedHandler())
 
+	web.MountAssets(r)
 	web.MountData(r, rc)
 
 	return r, nil
