@@ -71,6 +71,21 @@ func ParseMessageJSON(f *zip.File) error {
 		}
 	}
 
+	var n int
+	for _, m := range msg.Messages {
+		if !isSpamMessage(m) {
+			msg.Messages[n] = m
+			n++
+		}
+	}
+	if n == 0 {
+		return nil
+	}
+	for i := range msg.Messages[n:] {
+		msg.Messages[n+i] = nil
+	}
+	msg.Messages = msg.Messages[:n]
+
 	for i := range msg.Participants {
 		p := &msg.Participants[i]
 		p.Name = toUTF8(p.Name)
@@ -122,6 +137,28 @@ func toUTF8(s string) string {
 	}
 
 	return cleaned
+}
+
+func isSpamMessage(m *messageJSON) bool {
+	switch m.Type {
+	case messageGeneric:
+		switch {
+		case m.Content == "You can now call each other and see information such as Active Status and when you've read messages.":
+			return true
+		case strings.HasPrefix(m.Content, "Say hi to your new Facebook friend, ") && strings.HasSuffix(m.Content, "."):
+			return true
+		case m.Content == m.SenderName+" just joined Messenger! Be the first to send a welcome message or sticker.":
+			return true
+		case m.Content == m.SenderName+" is on Messenger.":
+			return true
+		}
+	case messageSubscribe:
+		return true
+	case messageUnsubscribe:
+		return true
+	}
+
+	return false
 }
 
 type threadJSON struct {
