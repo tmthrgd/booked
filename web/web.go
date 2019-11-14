@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"io"
 	"net/http"
 	"os"
 )
@@ -49,4 +50,17 @@ func ErrorHandler(handler func(http.ResponseWriter, *http.Request) error) http.H
 
 		http.Error(w, errorMsg, statusCode)
 	}
+}
+
+type Template interface {
+	Execute(io.Writer, interface{}) error
+}
+
+func NewTemplate(name string, funcs template.FuncMap) Template {
+	return newTemplate(name, funcs)
+}
+
+var templateFuncs = template.FuncMap{
+	"assetPath": assetPath,
+	"dataPath":  dataPath,
 }

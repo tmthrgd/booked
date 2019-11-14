@@ -3,6 +3,7 @@ package web
 import (
 	"net/http"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/go-chi/chi"
@@ -38,4 +39,8 @@ func MountAssets(r chi.Router) {
 
 func excludeAssets(path string, info os.FileInfo) bool {
 	return info.IsDir() || strings.HasPrefix(info.Name(), ".")
+}
+
+func assetPath(name string) string {
+	return path.Join("/assets", assetNames.Lookup(name))
 }

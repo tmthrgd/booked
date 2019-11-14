@@ -1,6 +1,7 @@
 package main
 
 //go:generate go run -tags=dev internal/assets/generate.go
+//go:generate go run -tags=dev internal/templates/generate.go
 
 import (
 	"flag"
