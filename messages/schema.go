@@ -12,7 +12,7 @@ import (
 	"golang.org/x/text/encoding/charmap"
 )
 
-var threads = make(map[string]*messageJSON)
+var threads = make(map[string]*threadJSON)
 
 func IsMessageJSON(f *zip.File) bool {
 	return strings.HasPrefix(path.Base(f.Name), "message_") &&
@@ -37,7 +37,7 @@ func ParseMessageJSON(f *zip.File) error {
 	dec := json.NewDecoder(rc)
 	dec.DisallowUnknownFields()
 
-	var msg messageJSON
+	var msg threadJSON
 	if err := dec.Decode(&msg); err != nil {
 		return fail(err)
 	}
@@ -75,8 +75,7 @@ func ParseMessageJSON(f *zip.File) error {
 		p := &msg.Participants[i]
 		p.Name = toUTF8(p.Name)
 	}
-	for i := range msg.Messages {
-		m := &msg.Messages[i]
+	for _, m := range msg.Messages {
 		m.SenderName = toUTF8(m.SenderName)
 		m.Content = toUTF8(m.Content)
 
@@ -108,7 +107,7 @@ func ParseMessageJSON(f *zip.File) error {
 	return nil
 }
 
-func sortMessages(t *messageJSON) {
+func sortMessages(t *threadJSON) {
 	sort.Slice(t.Messages, func(i, j int) bool {
 		return t.Messages[i].TimestampMS > t.Messages[j].TimestampMS
 	})
@@ -125,63 +124,65 @@ func toUTF8(s string) string {
 	return cleaned
 }
 
-type messageJSON struct {
+type threadJSON struct {
 	Participants []struct {
 		Name string
 	}
-	Messages []struct {
-		SenderName  string `json:"sender_name"`
-		TimestampMS uint64 `json:"timestamp_ms"`
-		Content     string
-		Photos      []struct {
-			URI               string
-			CreationTimestamp uint64 `json:"creation_timestamp"`
-		}
-		Videos []struct {
-			URI               string
-			CreationTimestamp uint64 `json:"creation_timestamp"`
-			Thumbnail         struct {
-				URI string
-			}
-		}
-		AudioFiles []struct {
-			URI               string
-			CreationTimestamp uint64 `json:"creation_timestamp"`
-		} `json:"audio_files"`
-		GIFs []struct {
-			URI string
-		}
-		Files []struct {
-			URI               string
-			CreationTimestamp uint64 `json:"creation_timestamp"`
-		}
-		Sticker struct {
-			URI string
-		}
-		Reactions []struct {
-			Reaction string
-			Actor    string
-		}
-		Plan struct {
-			Title     string
-			Location  string
-			Timestamp uint64
-		}
-		Share struct {
-			Link      string
-			ShareText string `json:"share_text"`
-		}
-		CallDuration uint64 `json:"call_duration"`
-		Type         messageType
-		Missed       bool
-		Users        []struct {
-			Name string
-		}
-	}
+	Messages           []*messageJSON
 	Title              string
 	IsStillParticipant bool       `json:"is_still_participant"`
 	ThreadType         threadType `json:"thread_type"`
 	ThreadPath         string     `json:"thread_path"`
+}
+
+type messageJSON struct {
+	SenderName  string `json:"sender_name"`
+	TimestampMS uint64 `json:"timestamp_ms"`
+	Content     string
+	Photos      []struct {
+		URI               string
+		CreationTimestamp uint64 `json:"creation_timestamp"`
+	}
+	Videos []struct {
+		URI               string
+		CreationTimestamp uint64 `json:"creation_timestamp"`
+		Thumbnail         struct {
+			URI string
+		}
+	}
+	AudioFiles []struct {
+		URI               string
+		CreationTimestamp uint64 `json:"creation_timestamp"`
+	} `json:"audio_files"`
+	GIFs []struct {
+		URI string
+	}
+	Files []struct {
+		URI               string
+		CreationTimestamp uint64 `json:"creation_timestamp"`
+	}
+	Sticker struct {
+		URI string
+	}
+	Reactions []struct {
+		Reaction string
+		Actor    string
+	}
+	Plan struct {
+		Title     string
+		Location  string
+		Timestamp uint64
+	}
+	Share struct {
+		Link      string
+		ShareText string `json:"share_text"`
+	}
+	CallDuration uint64 `json:"call_duration"`
+	Type         messageType
+	Missed       bool
+	Users        []struct {
+		Name string
+	}
 }
 
 type messageType string
