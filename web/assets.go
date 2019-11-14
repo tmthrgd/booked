@@ -15,6 +15,14 @@ import (
 var assetNames = vfshash.NewAssetNames(assets.FileSystem)
 
 func MountAssets(r chi.Router) {
+	assetNamesH := http.FileServer(assetNames).ServeHTTP
+	r.With(
+		handlers.SetHeadersWrap(map[string]string{
+			"Content-Type":  "image/png",
+			"Cache-Control": "public, max-age=1209600", // 14 days
+		}),
+	).Get("/favicon.ico", assetNamesH)
+
 	if assetNames.IsContentAddressable() {
 		r = r.With(
 			handlers.NeverModified,
