@@ -99,16 +99,19 @@ func ParseMessageJSON(f *zip.File) error {
 
 	if t, dup := threads[msg.ThreadPath]; dup {
 		t.Messages = append(t.Messages, msg.Messages...)
-
-		sort.Slice(t.Messages, func(i, j int) bool {
-			return t.Messages[i].TimestampMS >
-				t.Messages[j].TimestampMS
-		})
+		sortMessages(t)
 	} else {
+		sortMessages(&msg)
 		threads[msg.ThreadPath] = &msg
 	}
 
 	return nil
+}
+
+func sortMessages(t *messageJSON) {
+	sort.Slice(t.Messages, func(i, j int) bool {
+		return t.Messages[i].TimestampMS > t.Messages[j].TimestampMS
+	})
 }
 
 var latin1Encoder = charmap.ISO8859_1.NewEncoder()
