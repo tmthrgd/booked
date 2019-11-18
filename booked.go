@@ -5,6 +5,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -16,6 +17,12 @@ import (
 
 func init() {
 	log.SetFlags(0)
+
+	flag.Usage = func() {
+		out := flag.CommandLine.Output()
+		fmt.Fprintf(out, "usage: %s [flags] facebook-json.zip\n", os.Args[0])
+		flag.PrintDefaults()
+	}
 }
 
 func main() {
