@@ -36,6 +36,10 @@
 </dl>
 </section>
 <section>
+<h2>Messages Heatmap</h2>
+<div class=heatmap></div>
+</section>
+<section>
 <h2>Messages by Senders</h2>
 <div class=senders></div>
 </section>
@@ -56,6 +60,7 @@
 {{- end}}
 </section>
 {{- end}}
+<script>var heatmap = {{.Heatmap}};</script>
 <script>var senders = {{.Senders}};</script>
 <script defer src="{{assetPath "/d3.min.js"}}"></script>
 <script defer src="{{assetPath "/message.js"}}"></script>

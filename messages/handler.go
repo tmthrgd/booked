@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/go-chi/chi"
 	"go.tmthrgd.dev/booked/web"
@@ -66,6 +67,16 @@ var messageTmpl = web.NewTemplate("message.tmpl", template.FuncMap{
 })
 
 func threadHandler(w http.ResponseWriter, r *http.Request, t *threadJSON) error {
+	dateCount := make(map[string]int)
+	if len(t.Messages) > 2 {
+		newest := timeFromMS(t.Messages[0].TimestampMS)
+		oldest := timeFromMS(t.Messages[len(t.Messages)-1].TimestampMS)
+
+		for d := truncateDay(oldest); d.Before(newest); d = d.AddDate(0, 0, 1) {
+			dateCount[d.Format("2006-01-02")] = 0
+		}
+	}
+
 	senderCount := make(map[string]int)
 	for _, p := range t.Participants {
 		senderCount[p.Name] = 0
@@ -77,6 +88,9 @@ func threadHandler(w http.ResponseWriter, r *http.Request, t *threadJSON) error 
 	)
 	stickerCount := make(map[string]int)
 	for _, msg := range t.Messages {
+		d := timeFromMS(msg.TimestampMS)
+		dateCount[d.Format("2006-01-02")]++
+
 		senderCount[msg.SenderName]++
 
 		photos += len(msg.Photos)
@@ -103,6 +117,14 @@ func threadHandler(w http.ResponseWriter, r *http.Request, t *threadJSON) error 
 			}
 		}
 	}
+
+	heatmap := make([]heatmapValue, 0, len(dateCount))
+	for date, count := range dateCount {
+		heatmap = append(heatmap, heatmapValue{date, count})
+	}
+	sort.Slice(heatmap, func(i, j int) bool {
+		return heatmap[i].Date < heatmap[j].Date
+	})
 
 	senders := make([]senderValue, 0, len(senderCount))
 	for sender, count := range senderCount {
@@ -131,6 +153,7 @@ func threadHandler(w http.ResponseWriter, r *http.Request, t *threadJSON) error 
 	return web.WriteTemplateResponse(w, messageTmpl, &struct {
 		*threadJSON
 
+		Heatmap  []heatmapValue
 		Senders  []senderValue
 		Stickers []stickerValue
 
@@ -139,12 +162,26 @@ func threadHandler(w http.ResponseWriter, r *http.Request, t *threadJSON) error 
 	}{
 		t,
 
+		heatmap,
 		senders,
 		sticker,
 
 		photos, videos, audio, gifs, files,
 		stickers, plans, shares, calls, missed,
 	})
+}
+
+func timeFromMS(ms uint64) time.Time {
+	return time.Unix(int64(ms/1000), int64(ms%1000*1000))
+}
+
+func truncateDay(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+}
+
+type heatmapValue struct {
+	Date         string
+	MessageCount int
 }
 
 type senderValue struct {
