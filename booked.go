@@ -5,6 +5,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -24,5 +25,6 @@ func main() {
 		log.Fatal(err)
 	}
 
+	fmt.Printf("listening on %s\n", *addr)
 	log.Fatal(http.ListenAndServe(*addr, h))
 }
