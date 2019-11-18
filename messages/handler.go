@@ -75,6 +75,7 @@ func threadHandler(w http.ResponseWriter, r *http.Request, t *threadJSON) error 
 		photos, videos, audio, gifs, files     int
 		stickers, plans, shares, calls, missed int
 	)
+	stickerCount := make(map[string]int)
 	for _, msg := range t.Messages {
 		senderCount[msg.SenderName]++
 
@@ -86,6 +87,7 @@ func threadHandler(w http.ResponseWriter, r *http.Request, t *threadJSON) error 
 
 		if msg.Sticker.URI != "" {
 			stickers++
+			stickerCount[msg.Sticker.URI]++
 		}
 
 		switch msg.Type {
@@ -114,10 +116,23 @@ func threadHandler(w http.ResponseWriter, r *http.Request, t *threadJSON) error 
 		return senders[i].SenderName < senders[j].SenderName
 	})
 
+	sticker := make([]stickerValue, 0, len(stickerCount))
+	for uri, count := range stickerCount {
+		sticker = append(sticker, stickerValue{uri, count})
+	}
+	sort.Slice(sticker, func(i, j int) bool {
+		if sticker[i].Count != sticker[j].Count {
+			return sticker[i].Count > sticker[j].Count
+		}
+
+		return sticker[i].URI < sticker[j].URI // Stable sort.
+	})
+
 	return web.WriteTemplateResponse(w, messageTmpl, &struct {
 		*threadJSON
 
-		Senders []senderValue
+		Senders  []senderValue
+		Stickers []stickerValue
 
 		PhotosCount, VideosCount, AudioCount, GIFsCount, FilesCount          int
 		StickersCount, PlansCount, SharesCount, CallsCount, MissedCallsCount int
@@ -125,6 +140,7 @@ func threadHandler(w http.ResponseWriter, r *http.Request, t *threadJSON) error 
 		t,
 
 		senders,
+		sticker,
 
 		photos, videos, audio, gifs, files,
 		stickers, plans, shares, calls, missed,
@@ -134,4 +150,9 @@ func threadHandler(w http.ResponseWriter, r *http.Request, t *threadJSON) error 
 type senderValue struct {
 	SenderName   string
 	MessageCount int
+}
+
+type stickerValue struct {
+	URI   string
+	Count int
 }

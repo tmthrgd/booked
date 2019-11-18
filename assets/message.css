@@ -1,3 +1,16 @@
 body {
 	margin: 6rem 1rem 1rem;	
 }
+
+.stickers {
+	margin-bottom: 0;
+}
+
+.stickers img {
+	max-height: 7.5rem;
+}
+
+.stickers + .more {
+	margin-bottom: 2.5rem;
+	padding-left: 2.5rem;
+}

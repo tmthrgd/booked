@@ -39,7 +39,23 @@
 <h2>Messages by Senders</h2>
 <div class=senders></div>
 </section>
-</main>
+{{- with .Stickers}}
+<section>
+<h2>Stickers</h2>
+<ol class=stickers>
+{{- $stickers := .}}
+{{- if gt (len .) 10}}
+{{- $stickers = slice . 0 10}}
+{{- end}}
+{{- range $stickers}}
+<li><img src="{{dataPath .URI}}"> ×{{.Count}}</li>
+{{- end}}
+</ol>
+{{- if gt (len .) 10}}
+<span class=more>+{{sub (len .) 10}} more</span>
+{{- end}}
+</section>
+{{- end}}
 <script>var senders = {{.Senders}};</script>
 <script defer src="{{assetPath "/d3.min.js"}}"></script>
 <script defer src="{{assetPath "/message.js"}}"></script>
