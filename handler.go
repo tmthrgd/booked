@@ -31,5 +31,10 @@ func open(file string) (http.Handler, error) {
 	web.MountAssets(r)
 	web.MountData(r, rc)
 
+	messages.Mount(r)
+
+	// TODO(tmthrgd): Index page.
+	r.Get("/", http.RedirectHandler("/messages/", http.StatusTemporaryRedirect).ServeHTTP)
+
 	return r, nil
 }

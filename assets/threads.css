@@ -1,0 +1,13 @@
+body {
+	margin: 6rem 1rem 1rem;	
+}
+
+.threads {
+	padding-left: 2rem;
+
+	list-style-position: outside;
+}
+
+.threads li {
+	margin-bottom: 0;
+}

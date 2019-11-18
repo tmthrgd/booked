@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang=en>
+<meta charset=utf-8>
+<title>Message Threads</title>
+<link rel=stylesheet href="{{assetPath "/normalize.min.css"}}">
+<link rel=stylesheet href="{{assetPath "/skeleton.min.css"}}">
+<link rel=stylesheet href="{{assetPath "/threads.css"}}">
+<link rel=stylesheet href="https://fonts.googleapis.com/css?family=Raleway&amp;display=swap">
+<main class=container>
+<h1>Message Threads</h1>
+<section>
+<h2>Inbox</h2>
+{{template "threads_list" .Inbox}}
+</section>
+<section>
+<h2>Message Requests</h2>
+{{template "threads_list" .Requests}}
+</section>
+<section>
+<h2>Archived Threads</h2>
+{{template "threads_list" .Archived}}
+</section>
+</main>
+
+{{- define "threads_list" -}}
+<ol class=threads>
+{{- range .}}
+<li>{{.}}</li>
+{{- end}}
+</ol>
+{{- end}}
