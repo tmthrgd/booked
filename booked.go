@@ -5,14 +5,22 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
+
+	"go.tmthrgd.dev/booked/browser"
 )
+
+func init() {
+	log.SetFlags(0)
+}
 
 func main() {
 	addr := flag.String("addr", ":8080", "the address to listen on")
+	noLaunch := flag.Bool("no-launch", false, "skip launching a browser window")
 	flag.Parse()
 
 	if flag.NArg() < 1 {
@@ -25,6 +33,24 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("listening on %s\n", *addr)
+	if !*noLaunch {
+		go launch(*addr)
+	}
+
+	log.Printf("listening on %s", *addr)
 	log.Fatal(http.ListenAndServe(*addr, h))
+}
+
+func launch(addr string) {
+	u := &url.URL{
+		Scheme: "http",
+		Host:   addr,
+	}
+	if u.Hostname() == "" {
+		u.Host = net.JoinHostPort("localhost", u.Port())
+	}
+
+	if !browser.Open(u.String()) {
+		log.Printf("navigate to %s in your browser", u)
+	}
 }
