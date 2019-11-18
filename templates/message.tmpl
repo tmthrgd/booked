@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang=en>
+<meta charset=utf-8>
+<title>{{.Title}}</title>
+<link rel=stylesheet href="{{assetPath "/normalize.min.css"}}">
+<link rel=stylesheet href="{{assetPath "/skeleton.min.css"}}">
+<link rel=stylesheet href="{{assetPath "/message.css"}}">
+<link rel=stylesheet href="https://fonts.googleapis.com/css?family=Raleway&amp;display=swap">
+<main class=container>
+<h1>{{.Title}}</h1>
+<section>
+<h2>Basic Stats</h2>
+<dl>
+<dt>Participants</dt>
+<dd>{{len .Participants}}</dd>
+<dt>Messages</dt>
+<dd>{{len .Messages}}</dd>
+<dt>Photos</dt>
+<dd>{{.PhotosCount}}</dd>
+<dt>Videos</dt>
+<dd>{{.VideosCount}}</dd>
+<dt>Audio</dt>
+<dd>{{.AudioCount}}</dd>
+<dt>GIFs</dt>
+<dd>{{.GIFsCount}}</dd>
+<dt>Files</dt>
+<dd>{{.FilesCount}}</dd>
+<dt>Stickers</dt>
+<dd>{{.StickersCount}}</dd>
+<dt>Plans</dt>
+<dd>{{.PlansCount}}</dd>
+<dt>Shares</dt>
+<dd>{{.SharesCount}}</dd>
+<dt>Calls</dt>
+<dd>{{.CallsCount}}{{with .MissedCallsCount}} ({{.}} missed calls){{end}}</dd>
+</dl>
+</section>
+</main>
