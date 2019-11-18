@@ -66,11 +66,18 @@ var messageTmpl = web.NewTemplate("message.tmpl", template.FuncMap{
 })
 
 func threadHandler(w http.ResponseWriter, r *http.Request, t *threadJSON) error {
+	senderCount := make(map[string]int)
+	for _, p := range t.Participants {
+		senderCount[p.Name] = 0
+	}
+
 	var (
 		photos, videos, audio, gifs, files     int
 		stickers, plans, shares, calls, missed int
 	)
 	for _, msg := range t.Messages {
+		senderCount[msg.SenderName]++
+
 		photos += len(msg.Photos)
 		videos += len(msg.Videos)
 		audio += len(msg.AudioFiles)
@@ -95,15 +102,36 @@ func threadHandler(w http.ResponseWriter, r *http.Request, t *threadJSON) error 
 		}
 	}
 
+	senders := make([]senderValue, 0, len(senderCount))
+	for sender, count := range senderCount {
+		senders = append(senders, senderValue{sender, count})
+	}
+	sort.Slice(senders, func(i, j int) bool {
+		if senders[i].MessageCount != senders[j].MessageCount {
+			return senders[i].MessageCount > senders[j].MessageCount
+		}
+
+		return senders[i].SenderName < senders[j].SenderName
+	})
+
 	return web.WriteTemplateResponse(w, messageTmpl, &struct {
 		*threadJSON
+
+		Senders []senderValue
 
 		PhotosCount, VideosCount, AudioCount, GIFsCount, FilesCount          int
 		StickersCount, PlansCount, SharesCount, CallsCount, MissedCallsCount int
 	}{
 		t,
 
+		senders,
+
 		photos, videos, audio, gifs, files,
 		stickers, plans, shares, calls, missed,
 	})
+}
+
+type senderValue struct {
+	SenderName   string
+	MessageCount int
 }

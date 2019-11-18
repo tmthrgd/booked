@@ -35,4 +35,11 @@
 <dd>{{.CallsCount}}{{with .MissedCallsCount}} ({{.}} missed calls){{end}}</dd>
 </dl>
 </section>
+<section>
+<h2>Messages by Senders</h2>
+<div class=senders></div>
+</section>
 </main>
+<script>var senders = {{.Senders}};</script>
+<script defer src="{{assetPath "/d3.min.js"}}"></script>
+<script defer src="{{assetPath "/message.js"}}"></script>
