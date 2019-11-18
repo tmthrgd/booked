@@ -2,6 +2,8 @@
 
 **booked** is a small tool that offers visualization of Facebook export data.
 
+![Messages Heatmap](heatmap.png)
+
 To use **booked** you'll need a copy of your Facebook data. Follow [these
 instructions](https://www.facebook.com/help/1701730696756992) and download a
 copy of your data in the JSON format. Currently only visualization for
