@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"path"
 	"sort"
 	"strings"
@@ -42,8 +43,10 @@ func ParseMessageJSON(f *zip.File) error {
 		return fail(err)
 	}
 
-	if dec.More() {
+	if _, err := dec.Token(); err == nil {
 		return fail(errors.New("trailing json data"))
+	} else if err != io.EOF {
+		return fail(err)
 	}
 
 	if err := rc.Close(); err != nil {
