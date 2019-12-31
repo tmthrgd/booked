@@ -79,7 +79,7 @@ func threadHandler(w http.ResponseWriter, r *http.Request, t *threadJSON) error 
 
 	senderCount := make(map[string]int)
 	for _, p := range t.Participants {
-		senderCount[p.Name] = 0
+		senderCount[string(p.Name)] = 0
 	}
 
 	var (
@@ -91,7 +91,7 @@ func threadHandler(w http.ResponseWriter, r *http.Request, t *threadJSON) error 
 		d := timeFromMS(msg.TimestampMS)
 		dateCount[d.Format("2006-01-02")]++
 
-		senderCount[msg.SenderName]++
+		senderCount[string(msg.SenderName)]++
 
 		photos += len(msg.Photos)
 		videos += len(msg.Videos)

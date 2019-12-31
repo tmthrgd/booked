@@ -86,31 +86,6 @@ func ParseMessageJSON(f *zip.File) error {
 	}
 	msg.Messages = msg.Messages[:n]
 
-	for i := range msg.Participants {
-		p := &msg.Participants[i]
-		p.Name = toUTF8(p.Name)
-	}
-	for _, m := range msg.Messages {
-		m.SenderName = toUTF8(m.SenderName)
-		m.Content = toUTF8(m.Content)
-
-		for j := range m.Reactions {
-			r := &m.Reactions[j]
-			r.Reaction = toUTF8(r.Reaction)
-			r.Actor = toUTF8(r.Actor)
-		}
-
-		m.Plan.Title = toUTF8(m.Plan.Title)
-		m.Plan.Location = toUTF8(m.Plan.Location)
-		m.Share.ShareText = toUTF8(m.Share.ShareText)
-
-		for j := range m.Users {
-			u := &m.Users[j]
-			u.Name = toUTF8(u.Name)
-		}
-	}
-	msg.Title = toUTF8(msg.Title)
-
 	if t, dup := threads[msg.ThreadPath]; dup {
 		t.Messages = append(t.Messages, msg.Messages...)
 		sortMessages(t)
@@ -128,24 +103,13 @@ func sortMessages(t *threadJSON) {
 	})
 }
 
-var latin1Encoder = charmap.ISO8859_1.NewEncoder()
-
-func toUTF8(s string) string {
-	cleaned, err := latin1Encoder.String(s)
-	if err != nil {
-		return s
-	}
-
-	return cleaned
-}
-
 func isSpamMessage(m *messageJSON) bool {
 	switch m.Type {
 	case messageGeneric:
 		switch {
 		case m.Content == "You can now call each other and see information such as Active Status and when you've read messages.":
 			return true
-		case strings.HasPrefix(m.Content, "Say hi to your new Facebook friend, ") && strings.HasSuffix(m.Content, "."):
+		case strings.HasPrefix(string(m.Content), "Say hi to your new Facebook friend, ") && strings.HasSuffix(string(m.Content), "."):
 			return true
 		case m.Content == m.SenderName+" just joined Messenger! Be the first to send a welcome message or sticker.":
 			return true
@@ -161,21 +125,36 @@ func isSpamMessage(m *messageJSON) bool {
 	return false
 }
 
+type utf8String string
+
+var latin1Encoder = charmap.ISO8859_1.NewEncoder()
+
+func (s *utf8String) UnmarshalJSON(data []byte) error {
+	var sv string
+	err := json.Unmarshal(data, &sv)
+	if err != nil {
+		return err
+	}
+
+	*(*string)(s), err = latin1Encoder.String(sv)
+	return err
+}
+
 type threadJSON struct {
 	Participants []struct {
-		Name string
+		Name utf8String
 	}
 	Messages           []*messageJSON
-	Title              string
+	Title              utf8String
 	IsStillParticipant bool       `json:"is_still_participant"`
 	ThreadType         threadType `json:"thread_type"`
 	ThreadPath         string     `json:"thread_path"`
 }
 
 type messageJSON struct {
-	SenderName  string `json:"sender_name"`
-	TimestampMS uint64 `json:"timestamp_ms"`
-	Content     string
+	SenderName  utf8String `json:"sender_name"`
+	TimestampMS uint64     `json:"timestamp_ms"`
+	Content     utf8String
 	Photos      []struct {
 		URI               string
 		CreationTimestamp uint64 `json:"creation_timestamp"`
@@ -202,23 +181,23 @@ type messageJSON struct {
 		URI string
 	}
 	Reactions []struct {
-		Reaction string
-		Actor    string
+		Reaction utf8String
+		Actor    utf8String
 	}
 	Plan struct {
-		Title     string
-		Location  string
+		Title     utf8String
+		Location  utf8String
 		Timestamp uint64
 	}
 	Share struct {
 		Link      string
-		ShareText string `json:"share_text"`
+		ShareText utf8String `json:"share_text"`
 	}
 	CallDuration uint64 `json:"call_duration"`
 	Type         messageType
 	Missed       bool
 	Users        []struct {
-		Name string
+		Name utf8String
 	}
 }
 
