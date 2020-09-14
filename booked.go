@@ -35,7 +35,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	h, err := open(flag.Arg(0))
+	h, err := open(flag.Args()...)
 	if err != nil {
 		log.Fatal(err)
 	}

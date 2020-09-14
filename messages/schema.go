@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"path"
 	"sort"
 	"strings"
@@ -202,6 +203,7 @@ type messageJSON struct {
 	Users        []struct {
 		Name utf8String
 	}
+	IP net.IP
 }
 
 type messageType string

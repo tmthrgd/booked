@@ -9,17 +9,21 @@ import (
 	"go.tmthrgd.dev/booked/web"
 )
 
-func open(file string) (http.Handler, error) {
-	rc, err := zip.OpenReader(file)
-	if err != nil {
-		return nil, err
-	}
+func open(files ...string) (http.Handler, error) {
+	var rcs []*zip.ReadCloser
+	for _, file := range files {
+		rc, err := zip.OpenReader(file)
+		if err != nil {
+			return nil, err
+		}
+		rcs = append(rcs, rc)
 
-	for _, f := range rc.File {
-		switch {
-		case messages.IsMessageJSON(f):
-			if err := messages.ParseMessageJSON(f); err != nil {
-				return nil, err
+		for _, f := range rc.File {
+			switch {
+			case messages.IsMessageJSON(f):
+				if err := messages.ParseMessageJSON(f); err != nil {
+					return nil, err
+				}
 			}
 		}
 	}
@@ -29,7 +33,7 @@ func open(file string) (http.Handler, error) {
 	r.MethodNotAllowed(web.MethodNotAllowedHandler())
 
 	web.MountAssets(r)
-	web.MountData(r, rc)
+	web.MountData(r, rcs...)
 
 	messages.Mount(r)
 
