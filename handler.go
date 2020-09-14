@@ -37,6 +37,10 @@ func open(files ...string) (http.Handler, error) {
 
 	messages.Mount(r)
 
+	if err := messages.FixupURIs(rcs...); err != nil {
+		return nil, err
+	}
+
 	// TODO(tmthrgd): Index page.
 	r.Get("/", http.RedirectHandler("/messages/", http.StatusTemporaryRedirect).ServeHTTP)
 
